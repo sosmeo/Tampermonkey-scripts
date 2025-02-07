@@ -1,0 +1,42 @@
+// ==UserScript==
+// @name         对你添加的白名单网站强制新标签页打开链接
+// @namespace    http://tampermonkey.net/
+// @author       sosmeo&chatgpt
+// @version      2.0
+// @description  仅让白名单中的网站在新标签页打开链接，其他网站不受影响
+// @match        *://*/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // 🔹 你可以在这里添加/删除需要生效的网站
+    const whitelist = [
+        'youtube.com',
+        'example.com' // 你可以添加更多网站
+    ];
+
+    function isWhitelisted() {
+        return whitelist.some(site => window.location.hostname.includes(site));
+    }
+
+    function openInNewTab(event) {
+        if (!isWhitelisted()) return; // 如果当前网站不在白名单，直接退出
+        
+        const link = event.target.closest('a'); // 找到点击的链接
+        if (link && link.href && !link.hasAttribute('target') && link.href.startsWith('http')) {
+            event.preventDefault(); // 阻止默认跳转
+            event.stopPropagation(); // 阻止事件冒泡，防止内部 JS 触发跳转
+            setTimeout(() => {
+                window.open(link.href, '_blank'); // 在新标签页打开链接
+            }, 50); // 延迟执行，提高兼容性
+        }
+    }
+
+    function observeLinks() {
+        document.addEventListener('click', openInNewTab, true);
+    }
+
+    observeLinks(); // 监听整个页面点击事件
+})();
